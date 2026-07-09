@@ -206,3 +206,70 @@ body {
   cursor: pointer;
   font-size: 0.8rem;
 }
+
+.export-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.export-modal {
+  width: min(600px, 90vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: #1a1a20;
+  border: 1px solid #2a2a33;
+  border-radius: 10px;
+  padding: 1.2rem;
+}
+
+.export-modal h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.export-modal p {
+  margin: 0;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.export-modal textarea {
+  flex: 1;
+  min-height: 260px;
+  box-sizing: border-box;
+  background: #0f0f13;
+  color: #eee;
+  border: 1px solid #2a2a33;
+  border-radius: 6px;
+  padding: 0.6rem;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.export-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-modal-actions button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #26262f;
+  color: #eee;
+  cursor: pointer;
+}
+
+.export-status {
+  color: #34d399;
+  font-size: 0.8rem;
+}

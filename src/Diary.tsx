@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import { MEAL_TYPES, type Meal, type MealType } from './types'
+import { buildExportText } from './export'
 
 const toLocalInputValue = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -22,6 +23,8 @@ export default function Diary({ session }: { session: Session }) {
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState(emptyForm())
+  const [exportText, setExportText] = useState<string | null>(null)
+  const [copyStatus, setCopyStatus] = useState<string | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -97,6 +100,21 @@ export default function Diary({ session }: { session: Session }) {
     load()
   }
 
+  const openExport = () => {
+    setCopyStatus(null)
+    setExportText(buildExportText(meals))
+  }
+
+  const copyExport = async () => {
+    if (!exportText) return
+    try {
+      await navigator.clipboard.writeText(exportText)
+      setCopyStatus('คัดลอกแล้ว!')
+    } catch {
+      setCopyStatus('คัดลอกอัตโนมัติไม่ได้ กรุณาเลือกข้อความแล้วกด Ctrl+C เอง')
+    }
+  }
+
   const groups = meals.reduce<Record<string, Meal[]>>((acc, meal) => {
     const day = new Date(meal.eaten_at).toLocaleDateString('th-TH', {
       year: 'numeric',
@@ -114,6 +132,7 @@ export default function Diary({ session }: { session: Session }) {
       <div className="toolbar">
         <h1>Food Diary</h1>
         <span className="spacer" />
+        <button onClick={openExport}>Export</button>
         <span className="user-email">{session.user.email}</span>
         <button onClick={() => supabase.auth.signOut()}>ออกจากระบบ</button>
       </div>
@@ -227,6 +246,22 @@ export default function Diary({ session }: { session: Session }) {
         ))}
         {!loading && meals.length === 0 && <p className="diary-empty">ยังไม่มีบันทึกมื้ออาหารเลย</p>}
       </div>
+
+      {exportText !== null && (
+        <div className="export-modal-backdrop" onClick={() => setExportText(null)}>
+          <div className="export-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Export food diary</h2>
+            <p>คัดลอกข้อความนี้ไปวางให้ ChatGPT หรือ Claude ช่วยดูภาพรวมการกินได้เลย</p>
+            <textarea readOnly value={exportText} onFocus={(e) => e.target.select()} />
+            <div className="export-modal-actions">
+              {copyStatus && <span className="export-status">{copyStatus}</span>}
+              <span className="spacer" />
+              <button onClick={copyExport}>คัดลอก</button>
+              <button onClick={() => setExportText(null)}>ปิด</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
