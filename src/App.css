@@ -1,0 +1,208 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #0f0f13;
+  color: #eee;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 280px;
+}
+
+.login-form input,
+.login-form button {
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1a1a20;
+  color: #eee;
+}
+
+.login-form button {
+  background: #16a34a;
+  border: none;
+  cursor: pointer;
+}
+
+.login-error {
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
+.diary-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.toolbar h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.toolbar .spacer {
+  flex: 1;
+}
+
+.toolbar .user-email {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.toolbar button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #26262f;
+  color: #eee;
+  cursor: pointer;
+}
+
+.meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: #1a1a20;
+  border: 1px solid #2a2a33;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.meal-form-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.meal-form input,
+.meal-form select,
+.meal-form textarea {
+  background: #14141a;
+  color: #eee;
+  border: 1px solid #2a2a33;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-family: inherit;
+}
+
+.meal-form textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.meal-form-row input[type='datetime-local'] {
+  flex: 1;
+}
+
+.meal-form > button,
+.meal-form-row > button {
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: none;
+  background: #16a34a;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.diary-loading,
+.diary-empty {
+  color: #999;
+  text-align: center;
+}
+
+.diary-day h2 {
+  font-size: 1rem;
+  color: #999;
+  margin: 1.5rem 0 0.6rem;
+  font-weight: 600;
+}
+
+.meal-card {
+  display: flex;
+  gap: 0.8rem;
+  background: #1a1a20;
+  border: 1px solid #2a2a33;
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.meal-card-editing {
+  flex-direction: column;
+}
+
+.meal-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.meal-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.meal-type-tag {
+  background: #16a34a33;
+  color: #4ade80;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.meal-time {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.meal-description {
+  margin: 0 0 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.meal-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.meal-card-actions button {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #26262f;
+  color: #eee;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
