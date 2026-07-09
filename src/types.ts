@@ -1,5 +1,7 @@
 export type MealType = 'เช้า' | 'กลางวัน' | 'เย็น' | 'ของว่าง' | 'อื่นๆ'
 
+export type FoodTag = 'อาหารบ้าน' | 'Fast Food' | 'ผลไม้' | 'นม' | 'Snack'
+
 export type Meal = {
   id: string
   owner: string
@@ -7,7 +9,11 @@ export type Meal = {
   meal_type: MealType
   description: string
   image_url: string | null
+  fullness: number | null
+  hunger: number | null
+  tags: FoodTag[]
   created_at: string
 }
 
 export const MEAL_TYPES: MealType[] = ['เช้า', 'กลางวัน', 'เย็น', 'ของว่าง', 'อื่นๆ']
+export const FOOD_TAGS: FoodTag[] = ['อาหารบ้าน', 'Fast Food', 'ผลไม้', 'นม', 'Snack']

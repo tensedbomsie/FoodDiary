@@ -23,7 +23,12 @@ export function buildExportText(meals: Meal[]) {
         hour: '2-digit',
         minute: '2-digit',
       })
-      lines.push(`- [${time}] ${meal.meal_type}: ${meal.description}`)
+      const tags = meal.tags?.length ? ` [${meal.tags.join(', ')}]` : ''
+      const ratings: string[] = []
+      if (meal.hunger) ratings.push(`หิว ${meal.hunger}/5`)
+      if (meal.fullness) ratings.push(`อิ่ม ${meal.fullness}/5`)
+      const ratingText = ratings.length ? ` (${ratings.join(', ')})` : ''
+      lines.push(`- [${time}] ${meal.meal_type}: ${meal.description}${tags}${ratingText}`)
     }
     lines.push('')
   }

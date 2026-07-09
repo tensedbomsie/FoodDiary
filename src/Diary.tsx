@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
-import { MEAL_TYPES, type Meal, type MealType } from './types'
+import { FOOD_TAGS, MEAL_TYPES, type FoodTag, type Meal, type MealType } from './types'
 import { buildExportText } from './export'
+import StarRating from './StarRating'
 
 const toLocalInputValue = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -13,8 +14,37 @@ const emptyForm = () => ({
   eatenAt: toLocalInputValue(new Date()),
   mealType: 'อื่นๆ' as MealType,
   description: '',
+  fullness: null as number | null,
+  hunger: null as number | null,
+  tags: [] as FoodTag[],
   file: null as File | null,
 })
+
+function TagPicker({
+  value,
+  onChange,
+}: {
+  value: FoodTag[]
+  onChange: (tags: FoodTag[]) => void
+}) {
+  const toggle = (tag: FoodTag) => {
+    onChange(value.includes(tag) ? value.filter((t) => t !== tag) : [...value, tag])
+  }
+  return (
+    <div className="tag-picker">
+      {FOOD_TAGS.map((tag) => (
+        <button
+          key={tag}
+          type="button"
+          className={`tag-chip${value.includes(tag) ? ' selected' : ''}`}
+          onClick={() => toggle(tag)}
+        >
+          {tag}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 export default function Diary({ session }: { session: Session }) {
   const [meals, setMeals] = useState<Meal[]>([])
@@ -58,6 +88,9 @@ export default function Diary({ session }: { session: Session }) {
       eaten_at: new Date(form.eatenAt).toISOString(),
       meal_type: form.mealType,
       description: form.description,
+      fullness: form.fullness,
+      hunger: form.hunger,
+      tags: form.tags,
       image_url: imageUrl,
     })
     setForm(emptyForm())
@@ -71,6 +104,9 @@ export default function Diary({ session }: { session: Session }) {
       eatenAt: toLocalInputValue(new Date(meal.eaten_at)),
       mealType: meal.meal_type,
       description: meal.description,
+      fullness: meal.fullness,
+      hunger: meal.hunger,
+      tags: meal.tags ?? [],
       file: null,
     })
   }
@@ -87,6 +123,9 @@ export default function Diary({ session }: { session: Session }) {
         eaten_at: new Date(editForm.eatenAt).toISOString(),
         meal_type: editForm.mealType,
         description: editForm.description,
+        fullness: editForm.fullness,
+        hunger: editForm.hunger,
+        tags: editForm.tags,
         ...(imageUrl ? { image_url: imageUrl } : {}),
       })
       .eq('id', id)
@@ -162,6 +201,20 @@ export default function Diary({ session }: { session: Session }) {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           required
         />
+        <TagPicker value={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
+        <div className="meal-form-row rating-row">
+          <div className="rating-field">
+            <span>ความหิวก่อนกิน</span>
+            <StarRating value={form.hunger} onChange={(v) => setForm({ ...form, hunger: v })} />
+          </div>
+          <div className="rating-field">
+            <span>ความอิ่มหลังกิน</span>
+            <StarRating
+              value={form.fullness}
+              onChange={(v) => setForm({ ...form, fullness: v })}
+            />
+          </div>
+        </div>
         <div className="meal-form-row">
           <input
             type="file"
@@ -206,6 +259,26 @@ export default function Diary({ session }: { session: Session }) {
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                   />
+                  <TagPicker
+                    value={editForm.tags}
+                    onChange={(tags) => setEditForm({ ...editForm, tags })}
+                  />
+                  <div className="meal-form-row rating-row">
+                    <div className="rating-field">
+                      <span>ความหิวก่อนกิน</span>
+                      <StarRating
+                        value={editForm.hunger}
+                        onChange={(v) => setEditForm({ ...editForm, hunger: v })}
+                      />
+                    </div>
+                    <div className="rating-field">
+                      <span>ความอิ่มหลังกิน</span>
+                      <StarRating
+                        value={editForm.fullness}
+                        onChange={(v) => setEditForm({ ...editForm, fullness: v })}
+                      />
+                    </div>
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
@@ -234,6 +307,31 @@ export default function Diary({ session }: { session: Session }) {
                       </span>
                     </div>
                     <p className="meal-description">{meal.description}</p>
+                    {meal.tags?.length > 0 && (
+                      <div className="meal-tags">
+                        {meal.tags.map((tag) => (
+                          <span key={tag} className="tag-chip readonly">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {(meal.hunger || meal.fullness) && (
+                      <div className="meal-ratings">
+                        {meal.hunger && (
+                          <span className="meal-rating-readout">
+                            หิว: {'★'.repeat(meal.hunger)}
+                            {'☆'.repeat(5 - meal.hunger)}
+                          </span>
+                        )}
+                        {meal.fullness && (
+                          <span className="meal-rating-readout">
+                            อิ่ม: {'★'.repeat(meal.fullness)}
+                            {'☆'.repeat(5 - meal.fullness)}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div className="meal-card-actions">
                       <button onClick={() => startEdit(meal)}>แก้ไข</button>
                       <button onClick={() => deleteMeal(meal.id)}>ลบ</button>
