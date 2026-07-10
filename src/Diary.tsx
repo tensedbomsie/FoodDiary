@@ -139,9 +139,9 @@ export default function Diary({ session }: { session: Session }) {
     load()
   }
 
-  const openExport = () => {
+  const openExport = (mealsToExport: Meal[] = meals) => {
     setCopyStatus(null)
-    setExportText(buildExportText(meals))
+    setExportText(buildExportText(mealsToExport))
   }
 
   const copyExport = async () => {
@@ -171,7 +171,7 @@ export default function Diary({ session }: { session: Session }) {
       <div className="toolbar">
         <h1>Food Diary</h1>
         <span className="spacer" />
-        <button onClick={openExport}>Export</button>
+        <button onClick={() => openExport()}>Export</button>
         <span className="user-email">{session.user.email}</span>
         <button onClick={() => supabase.auth.signOut()}>ออกจากระบบ</button>
       </div>
@@ -232,7 +232,12 @@ export default function Diary({ session }: { session: Session }) {
       <div className="diary-list">
         {Object.entries(groups).map(([day, dayMeals]) => (
           <div key={day} className="diary-day">
-            <h2>{day}</h2>
+            <div className="diary-day-header">
+              <h2>{day}</h2>
+              <button className="day-export-btn" onClick={() => openExport(dayMeals)}>
+                Export วันนี้
+              </button>
+            </div>
             {dayMeals.map((meal) =>
               editingId === meal.id ? (
                 <div key={meal.id} className="meal-card meal-card-editing">

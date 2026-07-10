@@ -134,8 +134,31 @@ body {
 .diary-day h2 {
   font-size: 1rem;
   color: #999;
-  margin: 1.5rem 0 0.6rem;
+  margin: 0;
   font-weight: 600;
+}
+
+.diary-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0.6rem;
+}
+
+.day-export-btn {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #26262f;
+  color: #999;
+  cursor: pointer;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.day-export-btn:hover {
+  color: #eee;
 }
 
 .meal-card {
