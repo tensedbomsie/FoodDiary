@@ -29,6 +29,7 @@ export function buildExportText(meals: Meal[]) {
       if (meal.fullness) ratings.push(`อิ่ม ${meal.fullness}/5`)
       const ratingText = ratings.length ? ` (${ratings.join(', ')})` : ''
       lines.push(`- [${time}] ${meal.meal_type}: ${meal.description}${tags}${ratingText}`)
+      if (meal.image_url) lines.push(`  รูป: ${meal.image_url}`)
     }
     lines.push('')
   }
