@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
-import { FOOD_TAGS, MEAL_TYPES, type FoodTag, type Meal, type MealType } from './types'
+import {
+  FOOD_TAGS,
+  MEAL_TYPES,
+  mealKcal,
+  type Food,
+  type FoodTag,
+  type Meal,
+  type MealType,
+} from './types'
 import { buildExportText } from './export'
 import StarRating from './StarRating'
+import FoodPicker, { type SelectedFood } from './FoodPicker'
 
 const toLocalInputValue = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -18,6 +27,7 @@ const emptyForm = () => ({
   hunger: null as number | null,
   tags: [] as FoodTag[],
   file: null as File | null,
+  foods: [] as SelectedFood[],
 })
 
 function TagPicker({
@@ -48,6 +58,7 @@ function TagPicker({
 
 export default function Diary({ session }: { session: Session }) {
   const [meals, setMeals] = useState<Meal[]>([])
+  const [foods, setFoods] = useState<Food[]>([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -58,11 +69,15 @@ export default function Diary({ session }: { session: Session }) {
 
   const load = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('meals')
-      .select('*')
-      .order('eaten_at', { ascending: false })
-    setMeals((data as Meal[]) ?? [])
+    const [{ data: mealData }, { data: foodData }] = await Promise.all([
+      supabase
+        .from('meals')
+        .select('*, meal_foods(*, food:foods(*))')
+        .order('eaten_at', { ascending: false }),
+      supabase.from('foods').select('*').order('name'),
+    ])
+    setMeals((mealData as Meal[]) ?? [])
+    setFoods((foodData as Food[]) ?? [])
     setLoading(false)
   }
 
@@ -78,21 +93,38 @@ export default function Diary({ session }: { session: Session }) {
     return data.publicUrl
   }
 
+  const syncMealFoods = async (mealId: string, selected: SelectedFood[]) => {
+    await supabase.from('meal_foods').delete().eq('meal_id', mealId)
+    if (selected.length === 0) return
+    await supabase.from('meal_foods').insert(
+      selected.map((s) => ({
+        meal_id: mealId,
+        food_id: s.food.id,
+        quantity: s.quantity,
+      })),
+    )
+  }
+
   const addMeal = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     let imageUrl: string | null = null
     if (form.file) imageUrl = await uploadImage(form.file)
-    await supabase.from('meals').insert({
-      owner: session.user.id,
-      eaten_at: new Date(form.eatenAt).toISOString(),
-      meal_type: form.mealType,
-      description: form.description,
-      fullness: form.fullness,
-      hunger: form.hunger,
-      tags: form.tags,
-      image_url: imageUrl,
-    })
+    const { data: inserted } = await supabase
+      .from('meals')
+      .insert({
+        owner: session.user.id,
+        eaten_at: new Date(form.eatenAt).toISOString(),
+        meal_type: form.mealType,
+        description: form.description,
+        fullness: form.fullness,
+        hunger: form.hunger,
+        tags: form.tags,
+        image_url: imageUrl,
+      })
+      .select('id')
+      .single()
+    if (inserted) await syncMealFoods(inserted.id, form.foods)
     setForm(emptyForm())
     setSaving(false)
     load()
@@ -108,6 +140,9 @@ export default function Diary({ session }: { session: Session }) {
       hunger: meal.hunger,
       tags: meal.tags ?? [],
       file: null,
+      foods: (meal.meal_foods ?? [])
+        .filter((mf) => mf.food)
+        .map((mf) => ({ food: mf.food as Food, quantity: mf.quantity })),
     })
   }
 
@@ -129,6 +164,7 @@ export default function Diary({ session }: { session: Session }) {
         ...(imageUrl ? { image_url: imageUrl } : {}),
       })
       .eq('id', id)
+    await syncMealFoods(id, editForm.foods)
     setEditingId(null)
     load()
   }
@@ -166,6 +202,22 @@ export default function Diary({ session }: { session: Session }) {
     return acc
   }, {})
 
+  const addFoodTo = (target: 'form' | 'edit', food: Food) => {
+    const setter = target === 'form' ? setForm : setEditForm
+    setter((f) => ({ ...f, foods: [...f.foods, { food, quantity: 1 }] }))
+  }
+  const removeFoodFrom = (target: 'form' | 'edit', index: number) => {
+    const setter = target === 'form' ? setForm : setEditForm
+    setter((f) => ({ ...f, foods: f.foods.filter((_, i) => i !== index) }))
+  }
+  const changeQtyIn = (target: 'form' | 'edit', index: number, quantity: number) => {
+    const setter = target === 'form' ? setForm : setEditForm
+    setter((f) => ({
+      ...f,
+      foods: f.foods.map((s, i) => (i === index ? { ...s, quantity } : s)),
+    }))
+  }
+
   return (
     <div className="diary-page fade-in">
       <div className="toolbar">
@@ -195,11 +247,19 @@ export default function Diary({ session }: { session: Session }) {
             ))}
           </select>
         </div>
+
+        <FoodPicker
+          foods={foods}
+          selected={form.foods}
+          onAdd={(f) => addFoodTo('form', f)}
+          onRemove={(i) => removeFoodFrom('form', i)}
+          onQuantityChange={(i, q) => changeQtyIn('form', i, q)}
+        />
+
         <textarea
-          placeholder="กินอะไรไปบ้าง..."
+          placeholder="โน้ตเพิ่มเติม (ถ้ามี)..."
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          required
         />
         <TagPicker value={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
         <div className="meal-form-row rating-row">
@@ -230,123 +290,152 @@ export default function Diary({ session }: { session: Session }) {
       {loading && <p className="diary-loading">กำลังโหลด...</p>}
 
       <div className="diary-list">
-        {Object.entries(groups).map(([day, dayMeals]) => (
-          <div key={day} className="diary-day">
-            <div className="diary-day-header">
-              <h2>{day}</h2>
-              <button className="day-export-btn" onClick={() => openExport(dayMeals)}>
-                Export วันนี้
-              </button>
-            </div>
-            {dayMeals.map((meal) =>
-              editingId === meal.id ? (
-                <div key={meal.id} className="meal-card meal-card-editing">
-                  <div className="meal-form-row">
-                    <input
-                      type="datetime-local"
-                      value={editForm.eatenAt}
-                      onChange={(e) => setEditForm({ ...editForm, eatenAt: e.target.value })}
-                    />
-                    <select
-                      value={editForm.mealType}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, mealType: e.target.value as MealType })
-                      }
-                    >
-                      {MEAL_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  />
-                  <TagPicker
-                    value={editForm.tags}
-                    onChange={(tags) => setEditForm({ ...editForm, tags })}
-                  />
-                  <div className="meal-form-row rating-row">
-                    <div className="rating-field">
-                      <span>ความหิวก่อนกิน</span>
-                      <StarRating
-                        value={editForm.hunger}
-                        onChange={(v) => setEditForm({ ...editForm, hunger: v })}
-                      />
-                    </div>
-                    <div className="rating-field">
-                      <span>ความอิ่มหลังกิน</span>
-                      <StarRating
-                        value={editForm.fullness}
-                        onChange={(v) => setEditForm({ ...editForm, fullness: v })}
-                      />
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, file: e.target.files?.[0] ?? null })
-                    }
-                  />
-                  <div className="meal-card-actions">
-                    <button onClick={() => saveEdit(meal.id)}>บันทึก</button>
-                    <button onClick={() => setEditingId(null)}>ยกเลิก</button>
-                  </div>
+        {Object.entries(groups).map(([day, dayMeals]) => {
+          const dayKcal = dayMeals.reduce((sum, m) => sum + mealKcal(m), 0)
+          return (
+            <div key={day} className="diary-day">
+              <div className="diary-day-header">
+                <h2>{day}</h2>
+                <div className="diary-day-header-actions">
+                  {dayKcal > 0 && <span className="kcal-badge">🔥 {Math.round(dayKcal)} kcal</span>}
+                  <button className="day-export-btn" onClick={() => openExport(dayMeals)}>
+                    Export วันนี้
+                  </button>
                 </div>
-              ) : (
-                <div key={meal.id} className="meal-card">
-                  {meal.image_url && (
-                    <img className="meal-image" src={meal.image_url} alt={meal.description} />
-                  )}
-                  <div className="meal-card-body">
-                    <div className="meal-card-header">
-                      <span className="meal-type-tag">{meal.meal_type}</span>
-                      <span className="meal-time">
-                        {new Date(meal.eaten_at).toLocaleTimeString('th-TH', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </div>
-                    <p className="meal-description">{meal.description}</p>
-                    {meal.tags?.length > 0 && (
-                      <div className="meal-tags">
-                        {meal.tags.map((tag) => (
-                          <span key={tag} className="tag-chip readonly">
-                            {tag}
-                          </span>
+              </div>
+              {dayMeals.map((meal) =>
+                editingId === meal.id ? (
+                  <div key={meal.id} className="meal-card meal-card-editing">
+                    <div className="meal-form-row">
+                      <input
+                        type="datetime-local"
+                        value={editForm.eatenAt}
+                        onChange={(e) => setEditForm({ ...editForm, eatenAt: e.target.value })}
+                      />
+                      <select
+                        value={editForm.mealType}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, mealType: e.target.value as MealType })
+                        }
+                      >
+                        {MEAL_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
                         ))}
+                      </select>
+                    </div>
+                    <FoodPicker
+                      foods={foods}
+                      selected={editForm.foods}
+                      onAdd={(f) => addFoodTo('edit', f)}
+                      onRemove={(i) => removeFoodFrom('edit', i)}
+                      onQuantityChange={(i, q) => changeQtyIn('edit', i, q)}
+                    />
+                    <textarea
+                      placeholder="โน้ตเพิ่มเติม (ถ้ามี)..."
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    />
+                    <TagPicker
+                      value={editForm.tags}
+                      onChange={(tags) => setEditForm({ ...editForm, tags })}
+                    />
+                    <div className="meal-form-row rating-row">
+                      <div className="rating-field">
+                        <span>ความหิวก่อนกิน</span>
+                        <StarRating
+                          value={editForm.hunger}
+                          onChange={(v) => setEditForm({ ...editForm, hunger: v })}
+                        />
                       </div>
-                    )}
-                    {(meal.hunger || meal.fullness) && (
-                      <div className="meal-ratings">
-                        {meal.hunger && (
-                          <span className="meal-rating-readout">
-                            หิว: {'★'.repeat(meal.hunger)}
-                            {'☆'.repeat(5 - meal.hunger)}
-                          </span>
-                        )}
-                        {meal.fullness && (
-                          <span className="meal-rating-readout">
-                            อิ่ม: {'★'.repeat(meal.fullness)}
-                            {'☆'.repeat(5 - meal.fullness)}
-                          </span>
-                        )}
+                      <div className="rating-field">
+                        <span>ความอิ่มหลังกิน</span>
+                        <StarRating
+                          value={editForm.fullness}
+                          onChange={(v) => setEditForm({ ...editForm, fullness: v })}
+                        />
                       </div>
-                    )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, file: e.target.files?.[0] ?? null })
+                      }
+                    />
                     <div className="meal-card-actions">
-                      <button onClick={() => startEdit(meal)}>แก้ไข</button>
-                      <button onClick={() => deleteMeal(meal.id)}>ลบ</button>
+                      <button onClick={() => saveEdit(meal.id)}>บันทึก</button>
+                      <button onClick={() => setEditingId(null)}>ยกเลิก</button>
                     </div>
                   </div>
-                </div>
-              ),
-            )}
-          </div>
-        ))}
+                ) : (
+                  <div key={meal.id} className="meal-card">
+                    {meal.image_url && (
+                      <img className="meal-image" src={meal.image_url} alt="" />
+                    )}
+                    <div className="meal-card-body">
+                      <div className="meal-card-header">
+                        <span className="meal-type-tag">{meal.meal_type}</span>
+                        <span className="meal-time">
+                          {new Date(meal.eaten_at).toLocaleTimeString('th-TH', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {mealKcal(meal) > 0 && (
+                          <span className="kcal-badge">{Math.round(mealKcal(meal))} kcal</span>
+                        )}
+                      </div>
+                      {meal.meal_foods && meal.meal_foods.length > 0 && (
+                        <div className="meal-food-readout">
+                          {meal.meal_foods.map((mf) => (
+                            <span key={mf.id} className="chip">
+                              {mf.food?.name}
+                              {mf.quantity !== 1 ? ` ×${mf.quantity}` : ''}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {meal.description && (
+                        <p className="meal-description">{meal.description}</p>
+                      )}
+                      {meal.tags?.length > 0 && (
+                        <div className="meal-tags">
+                          {meal.tags.map((tag) => (
+                            <span key={tag} className="tag-chip readonly">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {(meal.hunger || meal.fullness) && (
+                        <div className="meal-ratings">
+                          {meal.hunger && (
+                            <span className="meal-rating-readout">
+                              หิว: {'★'.repeat(meal.hunger)}
+                              {'☆'.repeat(5 - meal.hunger)}
+                            </span>
+                          )}
+                          {meal.fullness && (
+                            <span className="meal-rating-readout">
+                              อิ่ม: {'★'.repeat(meal.fullness)}
+                              {'☆'.repeat(5 - meal.fullness)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="meal-card-actions">
+                        <button onClick={() => startEdit(meal)}>แก้ไข</button>
+                        <button onClick={() => deleteMeal(meal.id)}>ลบ</button>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+          )
+        })}
         {!loading && meals.length === 0 && <p className="diary-empty">ยังไม่มีบันทึกมื้ออาหารเลย</p>}
       </div>
 

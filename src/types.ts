@@ -2,6 +2,26 @@ export type MealType = 'เช้า' | 'กลางวัน' | 'เย็น'
 
 export type FoodTag = 'อาหารบ้าน' | 'Fast Food' | 'ผลไม้' | 'นม' | 'Snack'
 
+export type Food = {
+  id: string
+  owner: string
+  name: string
+  category: string
+  kcal: number | null
+  protein: string | null
+  created_at: string
+}
+
+export type MealFood = {
+  id: string
+  meal_id: string
+  food_id: string
+  quantity: number
+  kcal_override: number | null
+  created_at: string
+  food?: Food
+}
+
 export type Meal = {
   id: string
   owner: string
@@ -13,7 +33,17 @@ export type Meal = {
   hunger: number | null
   tags: FoodTag[]
   created_at: string
+  meal_foods?: MealFood[]
 }
 
 export const MEAL_TYPES: MealType[] = ['เช้า', 'กลางวัน', 'เย็น', 'ของว่าง', 'อื่นๆ']
 export const FOOD_TAGS: FoodTag[] = ['อาหารบ้าน', 'Fast Food', 'ผลไม้', 'นม', 'Snack']
+
+export function mealFoodKcal(mf: MealFood): number {
+  const base = mf.kcal_override ?? mf.food?.kcal ?? 0
+  return base * mf.quantity
+}
+
+export function mealKcal(meal: Meal): number {
+  return (meal.meal_foods ?? []).reduce((sum, mf) => sum + mealFoodKcal(mf), 0)
+}
