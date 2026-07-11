@@ -167,7 +167,7 @@ export default function Diary({ session }: { session: Session }) {
   }, {})
 
   return (
-    <div className="diary-page">
+    <div className="diary-page fade-in">
       <div className="toolbar">
         <h1>Food Diary</h1>
         <span className="spacer" />
