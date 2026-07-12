@@ -219,13 +219,12 @@ export default function Diary({ session }: { session: Session }) {
   }
 
   return (
-    <div className="diary-page fade-in">
-      <div className="toolbar">
-        <h1>Food Diary</h1>
-        <span className="spacer" />
-        <button onClick={() => openExport()}>Export</button>
-        <span className="user-email">{session.user.email}</span>
-        <button onClick={() => supabase.auth.signOut()}>ออกจากระบบ</button>
+    <div className="diary-page">
+      <div className="page-header">
+        <h1>Diary</h1>
+        <button className="btn btn-primary" onClick={() => openExport()}>
+          Export
+        </button>
       </div>
 
       <form className="meal-form" onSubmit={addMeal}>
