@@ -30,6 +30,9 @@ function App() {
   return (
     <div className="app-shell">
       <nav className="top-nav">
+        <a className="hub-link" href="https://tensedbomsie.github.io/SatoruHUB/" title="กลับไป Satoru HUB">
+          🏠
+        </a>
         <span className="brand">🍽️ Food Diary</span>
         <div className="nav-tabs">
           <button className={tab === 'diary' ? 'active' : ''} onClick={() => setTab('diary')}>
