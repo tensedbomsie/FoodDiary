@@ -427,17 +427,17 @@ textarea {
 .export-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: 4rem 1rem 2rem;
+  overflow-y: auto;
 }
 
 .export-modal {
   width: min(600px, 100%);
-  max-height: 80vh;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -447,6 +447,7 @@ textarea {
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .export-modal h2 {
