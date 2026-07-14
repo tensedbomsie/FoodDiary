@@ -812,6 +812,18 @@ textarea {
   font-size: 0.72rem;
 }
 
+.food-edit-btn {
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.food-edit-btn:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: var(--accent);
+}
+
 .set-delete {
   background: none;
   border: none;

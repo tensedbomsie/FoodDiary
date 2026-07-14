@@ -27,6 +27,9 @@ export default function FoodLibrary({ session }: { session: Session }) {
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyForm())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editKcal, setEditKcal] = useState('')
+  const [editProtein, setEditProtein] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -58,6 +61,24 @@ export default function FoodLibrary({ session }: { session: Session }) {
     if (!window.confirm('ลบอาหารนี้ออกจากลิสต์ใช่ไหม?')) return
     await supabase.from('foods').delete().eq('id', id)
     setFoods((f) => f.filter((x) => x.id !== id))
+  }
+
+  const startEdit = (f: Food) => {
+    setEditingId(f.id)
+    setEditKcal(f.kcal != null ? String(f.kcal) : '')
+    setEditProtein(f.protein ?? '')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+  }
+
+  const saveEdit = async (id: string) => {
+    const kcal = editKcal === '' ? null : Number(editKcal)
+    const protein = editProtein || null
+    await supabase.from('foods').update({ kcal, protein }).eq('id', id)
+    setFoods((fs) => fs.map((f) => (f.id === id ? { ...f, kcal, protein } : f)))
+    setEditingId(null)
   }
 
   const filtered = foods.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
@@ -125,20 +146,49 @@ export default function FoodLibrary({ session }: { session: Session }) {
         <div key={group.category}>
           <h2 className="section-title">{group.category}</h2>
           <div className="food-grid">
-            {group.items.map((f) => (
-              <div key={f.id} className="card food-card">
-                <div className="food-card-top">
-                  <span className="exercise-name">{f.name}</span>
-                  <button className="set-delete" onClick={() => deleteFood(f.id)}>
-                    ×
-                  </button>
+            {group.items.map((f) =>
+              editingId === f.id ? (
+                <div key={f.id} className="card food-card">
+                  <div className="food-card-top">
+                    <span className="exercise-name">{f.name}</span>
+                    <button className="set-delete" onClick={() => deleteFood(f.id)}>
+                      ×
+                    </button>
+                  </div>
+                  <div className="form-grid">
+                    <input
+                      type="number"
+                      placeholder="kcal"
+                      value={editKcal}
+                      onChange={(e) => setEditKcal(e.target.value)}
+                    />
+                    <input
+                      placeholder="Protein (เช่น 30g)"
+                      value={editProtein}
+                      onChange={(e) => setEditProtein(e.target.value)}
+                    />
+                  </div>
+                  <div className="meal-card-actions">
+                    <button className="btn btn-primary" onClick={() => saveEdit(f.id)}>บันทึก</button>
+                    <button className="btn" onClick={cancelEdit}>ยกเลิก</button>
+                  </div>
                 </div>
-                <div className="exercise-tags">
-                  {f.kcal != null && <span className="chip">{f.kcal} kcal</span>}
-                  {f.protein && <span className="chip">Protein {f.protein}</span>}
+              ) : (
+                <div key={f.id} className="card food-card">
+                  <div className="food-card-top">
+                    <span className="exercise-name">{f.name}</span>
+                    <button className="set-delete" onClick={() => deleteFood(f.id)}>
+                      ×
+                    </button>
+                  </div>
+                  <div className="exercise-tags">
+                    {f.kcal != null && <span className="chip">{f.kcal} kcal</span>}
+                    {f.protein && <span className="chip">Protein {f.protein}</span>}
+                    <button className="chip food-edit-btn" onClick={() => startEdit(f)}>✎ แก้ไข</button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
       ))}
