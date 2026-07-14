@@ -47,3 +47,17 @@ export function mealFoodKcal(mf: MealFood): number {
 export function mealKcal(meal: Meal): number {
   return (meal.meal_foods ?? []).reduce((sum, mf) => sum + mealFoodKcal(mf), 0)
 }
+
+function parseProteinGrams(protein: string | null | undefined): number {
+  if (!protein) return 0
+  const match = protein.match(/[\d.]+/)
+  return match ? parseFloat(match[0]) : 0
+}
+
+export function mealFoodProtein(mf: MealFood): number {
+  return parseProteinGrams(mf.food?.protein) * mf.quantity
+}
+
+export function mealProtein(meal: Meal): number {
+  return (meal.meal_foods ?? []).reduce((sum, mf) => sum + mealFoodProtein(mf), 0)
+}

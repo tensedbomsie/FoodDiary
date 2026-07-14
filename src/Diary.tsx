@@ -5,6 +5,7 @@ import {
   FOOD_TAGS,
   MEAL_TYPES,
   mealKcal,
+  mealProtein,
   type Food,
   type FoodTag,
   type Meal,
@@ -291,12 +292,14 @@ export default function Diary({ session }: { session: Session }) {
       <div className="diary-list">
         {Object.entries(groups).map(([day, dayMeals]) => {
           const dayKcal = dayMeals.reduce((sum, m) => sum + mealKcal(m), 0)
+          const dayProtein = dayMeals.reduce((sum, m) => sum + mealProtein(m), 0)
           return (
             <div key={day} className="diary-day">
               <div className="diary-day-header">
                 <h2>{day}</h2>
                 <div className="diary-day-header-actions">
                   {dayKcal > 0 && <span className="kcal-badge">🔥 {Math.round(dayKcal)} kcal</span>}
+                  {dayProtein > 0 && <span className="protein-badge">🥩 {Math.round(dayProtein)}g</span>}
                   <button className="day-export-btn" onClick={() => openExport(dayMeals)}>
                     Export วันนี้
                   </button>
@@ -384,6 +387,9 @@ export default function Diary({ session }: { session: Session }) {
                         </span>
                         {mealKcal(meal) > 0 && (
                           <span className="kcal-badge">{Math.round(mealKcal(meal))} kcal</span>
+                        )}
+                        {mealProtein(meal) > 0 && (
+                          <span className="protein-badge">🥩 {Math.round(mealProtein(meal))}g</span>
                         )}
                       </div>
                       {meal.meal_foods && meal.meal_foods.length > 0 && (
