@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import type { Food } from './types'
@@ -14,9 +14,12 @@ const CATEGORIES = [
   'วัตถุดิบ',
 ]
 
+const CUSTOM = '__custom__'
+
 const emptyForm = () => ({
   name: '',
-  category: CATEGORIES[0],
+  categorySelect: CATEGORIES[0],
+  customCategory: '',
   kcal: '',
   protein: '',
 })
@@ -44,11 +47,12 @@ export default function FoodLibrary({ session }: { session: Session }) {
 
   const addFood = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.name.trim()) return
+    const category = form.categorySelect === CUSTOM ? form.customCategory.trim() : form.categorySelect
+    if (!form.name.trim() || !category) return
     await supabase.from('foods').insert({
       owner: session.user.id,
       name: form.name,
-      category: form.category,
+      category,
       kcal: form.kcal === '' ? null : Number(form.kcal),
       protein: form.protein || null,
     })
@@ -82,10 +86,20 @@ export default function FoodLibrary({ session }: { session: Session }) {
   }
 
   const filtered = foods.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
-  const groups = CATEGORIES.map((cat) => ({
-    category: cat,
-    items: filtered.filter((f) => f.category === cat),
-  })).filter((g) => g.items.length > 0)
+
+  const allCategories = useMemo(() => {
+    const customOnes = Array.from(new Set(foods.map((f) => f.category))).filter(
+      (c) => !CATEGORIES.includes(c),
+    )
+    return [...CATEGORIES, ...customOnes]
+  }, [foods])
+
+  const groups = allCategories
+    .map((cat) => ({
+      category: cat,
+      items: filtered.filter((f) => f.category === cat),
+    }))
+    .filter((g) => g.items.length > 0)
 
   return (
     <div>
@@ -106,14 +120,15 @@ export default function FoodLibrary({ session }: { session: Session }) {
               required
             />
             <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              value={form.categorySelect}
+              onChange={(e) => setForm({ ...form, categorySelect: e.target.value })}
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
               ))}
+              <option value={CUSTOM}>+ กำหนดเอง...</option>
             </select>
             <input
               type="number"
@@ -126,6 +141,14 @@ export default function FoodLibrary({ session }: { session: Session }) {
               value={form.protein}
               onChange={(e) => setForm({ ...form, protein: e.target.value })}
             />
+            {form.categorySelect === CUSTOM && (
+              <input
+                placeholder="พิมพ์หมวดหมู่เอง"
+                value={form.customCategory}
+                onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
+                required
+              />
+            )}
           </div>
           <button type="submit" className="btn btn-primary">
             บันทึกอาหารใหม่
