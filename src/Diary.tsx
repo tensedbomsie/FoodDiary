@@ -283,11 +283,15 @@ export default function Diary({ session }: { session: Session }) {
           </div>
         </div>
         <div className="meal-form-row">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })}
-          />
+          <label className="btn upload-label">
+            📷 {form.file ? form.file.name : 'แนบรูป'}
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => setForm({ ...form, file: e.target.files?.[0] ?? null })}
+            />
+          </label>
           <button type="submit" disabled={saving}>
             {saving ? 'กำลังบันทึก...' : '+ บันทึกมื้ออาหาร'}
           </button>
@@ -366,13 +370,17 @@ export default function Diary({ session }: { session: Session }) {
                         />
                       </div>
                     </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, file: e.target.files?.[0] ?? null })
-                      }
-                    />
+                    <label className="btn upload-label">
+                      📷 {editForm.file ? editForm.file.name : 'แนบรูปใหม่'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, file: e.target.files?.[0] ?? null })
+                        }
+                      />
+                    </label>
                     <div className="meal-card-actions">
                       <button onClick={() => saveEdit(meal.id)}>บันทึก</button>
                       <button onClick={() => setEditingId(null)}>ยกเลิก</button>

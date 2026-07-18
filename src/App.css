@@ -736,6 +736,17 @@ select option {
   transform: translateY(-1px);
 }
 
+.upload-label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .page-header {
   display: flex;
   align-items: center;
