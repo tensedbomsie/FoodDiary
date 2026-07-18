@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import Login from './Login'
 import Diary from './Diary'
 import FoodLibrary from './FoodLibrary'
+import AppSwitcher from './AppSwitcher'
 import './App.css'
 
 type Tab = 'diary' | 'foods'
@@ -33,6 +34,7 @@ function App() {
         <a className="hub-link" href="https://tensedbomsie.github.io/SatoruHUB/" title="กลับไป Satoru HUB">
           🏠
         </a>
+        <AppSwitcher current="Food Diary" />
         <span className="brand">🍽️ Food Diary</span>
         <div className="nav-tabs">
           <button className={tab === 'diary' ? 'active' : ''} onClick={() => setTab('diary')}>
