@@ -78,6 +78,15 @@ textarea {
   padding: 0.5rem 0.6rem;
 }
 
+select {
+  background-color: #1a1b23;
+}
+
+select option {
+  background-color: #1a1b23;
+  color: var(--text);
+}
+
 /* ---------- Login ---------- */
 .login-page {
   min-height: 100vh;
