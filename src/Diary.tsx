@@ -20,9 +20,16 @@ const toLocalInputValue = (date: Date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+const mealTypeForTime = (date: Date): MealType => {
+  const hour = date.getHours()
+  if (hour < 12) return 'เช้า'
+  if (hour < 16) return 'กลางวัน'
+  return 'เย็น'
+}
+
 const emptyForm = () => ({
   eatenAt: toLocalInputValue(new Date()),
-  mealType: 'อื่นๆ' as MealType,
+  mealType: mealTypeForTime(new Date()),
   description: '',
   fullness: null as number | null,
   hunger: null as number | null,
