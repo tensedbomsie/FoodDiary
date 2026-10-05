@@ -14,6 +14,7 @@ import {
 import { buildExportText } from './export'
 import StarRating from './StarRating'
 import FoodPicker, { type SelectedFood } from './FoodPicker'
+import MealPhotoEstimate from './MealPhotoEstimate'
 
 const toLocalInputValue = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -296,6 +297,15 @@ export default function Diary({ session }: { session: Session }) {
             {saving ? 'กำลังบันทึก...' : '+ บันทึกมื้ออาหาร'}
           </button>
         </div>
+        {form.file && (
+          <MealPhotoEstimate
+            file={form.file}
+            foods={foods}
+            session={session}
+            onAddFood={(f) => addFoodTo('form', f)}
+            onFoodsChanged={load}
+          />
+        )}
       </form>
 
       {loading && <p className="diary-loading">กำลังโหลด...</p>}
@@ -381,6 +391,15 @@ export default function Diary({ session }: { session: Session }) {
                         }
                       />
                     </label>
+                    {editForm.file && (
+                      <MealPhotoEstimate
+                        file={editForm.file}
+                        foods={foods}
+                        session={session}
+                        onAddFood={(f) => addFoodTo('edit', f)}
+                        onFoodsChanged={load}
+                      />
+                    )}
                     <div className="meal-card-actions">
                       <button onClick={() => saveEdit(meal.id)}>บันทึก</button>
                       <button onClick={() => setEditingId(null)}>ยกเลิก</button>

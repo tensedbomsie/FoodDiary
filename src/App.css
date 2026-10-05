@@ -980,3 +980,17 @@ select option {
 .sidebar-item-icon {
   font-size: 1.2rem;
 }
+
+/* AI meal-photo estimate */
+.estimate-panel { margin-top: 10px; }
+.estimate-result { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; margin-top: 8px; }
+.estimate-hint { font-size: 13px; opacity: 0.7; margin: 0 0 8px; }
+.estimate-error { color: #ff8a8a; font-size: 14px; margin: 8px 0 0; }
+.estimate-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.estimate-row input[type='checkbox'] { width: 20px; height: 20px; flex: 0 0 auto; }
+.estimate-main { flex: 1 1 160px; min-width: 140px; display: flex; flex-direction: column; gap: 2px; }
+.estimate-name { width: 100%; }
+.estimate-sub { font-size: 12px; opacity: 0.65; }
+.estimate-num { width: 76px; }
+.estimate-unit { font-size: 13px; opacity: 0.7; }
+.estimate-total { margin: 8px 0 10px; font-size: 15px; }
